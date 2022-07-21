@@ -8,6 +8,17 @@ export async function validateGame(req, res, next) {
     return res.sendStatus(400);
   }
 
+  const { rows: idCheck } = await connection.query(
+    `
+    SELECT * FROM categories WHERE id = $1
+  `,
+    [newGame.categoryId]
+  );
+
+  if (idCheck.length === 0) {
+    return res.sendStatus(400);
+  }
+
   const { rows: gameCheck } = await connection.query(
     `
     SELECT * FROM games WHERE name = $1
