@@ -1,12 +1,26 @@
 import connection from "../dbStrategy/postgres.js";
 
 export async function getGames(req, res) {
-  try {
-    const { rows: gameList } = await connection.query(`SELECT * FROM games`);
-    //missing JOIN to add categoryName property
-    res.send(gameList);
-  } catch {
-    res.sendStatus(500);
+  const filter = req.query.name;
+  if (!filter) {
+    try {
+      const { rows: gameList } = await connection.query(`SELECT * FROM games`);
+      //missing JOIN to add categoryName property
+      res.send(gameList);
+    } catch {
+      res.sendStatus(500);
+    }
+  } else {
+    try {
+      const { rows: gameList } = await connection.query(
+        `SELECT * FROM games WHERE LOWER(name) LIKE LOWER($1)`,
+        [`${filter}%`]
+      );
+      //missing JOIN to add categoryName property
+      res.send(gameList);
+    } catch {
+      res.sendStatus(500);
+    }
   }
 }
 
