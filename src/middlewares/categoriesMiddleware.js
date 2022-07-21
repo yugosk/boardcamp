@@ -9,7 +9,9 @@ export async function validateCategory(req, res, next) {
   }
 
   const { rows: categoryCheck } = await connection.query(
-    "SELECT * FROM categories WHERE name = $1",
+    `
+  SELECT * FROM categories WHERE name = $1
+  `,
     [newCategory.name]
   );
   if (categoryCheck.length !== 0) {
