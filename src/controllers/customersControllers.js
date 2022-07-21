@@ -49,3 +49,26 @@ export async function postCustomer(req, res) {
     res.sendStatus(500);
   }
 }
+
+export async function putCustomer(req, res) {
+  const customerData = res.locals.customer;
+  const customerId = res.locals.customerId;
+
+  try {
+    await connection.query(
+      `
+    UPDATE customers SET name=$1, phone=$2, cpf=$3, birthday=$4 WHERE id = $5
+    `,
+      [
+        customerData.name,
+        customerData.phone,
+        customerData.cpf,
+        customerData.birthday,
+        customerId,
+      ]
+    );
+    res.sendStatus(200);
+  } catch {
+    return res.sendStatus(500);
+  }
+}
