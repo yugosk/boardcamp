@@ -6,6 +6,6 @@ export const gameSchema = Joi.object({
     /http(s?):([/|.|\w|\s|-])*\.(?:jpg|gif|png|jpeg)/i
   ),
   categoryId: Joi.number().required(),
-  stockTotal: Joi.number().required(),
-  pricePerDay: Joi.number().required(),
+  stockTotal: Joi.number().greater(0).required(),
+  pricePerDay: Joi.number().greater(0).required(),
 });
