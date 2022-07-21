@@ -1,10 +1,14 @@
 import connection from "../dbStrategy/postgres.js";
 
 export async function getCategories(req, res) {
-  const { rows: categories } = await connection.query(
-    "SELECT * FROM categories"
-  );
-  res.send(categories);
+  try {
+    const { rows: categories } = await connection.query(
+      "SELECT * FROM categories"
+    );
+    res.send(categories);
+  } catch {
+    res.sendStatus(500);
+  }
 }
 
 export async function postCategory(req, res) {
