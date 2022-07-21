@@ -23,3 +23,8 @@ export async function getCustomers(req, res) {
     }
   }
 }
+
+export async function getCustomerById(req, res) {
+  const customerId = res.locals.customerId;
+  res.send(customerId[0]);
+}
