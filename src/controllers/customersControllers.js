@@ -28,3 +28,24 @@ export async function getCustomerById(req, res) {
   const customerId = res.locals.customerId;
   res.send(customerId[0]);
 }
+
+export async function postCustomer(req, res) {
+  const newCustomer = res.locals.customer;
+  try {
+    await connection.query(
+      `
+    INSERT INTO customers ("name", "phone", "cpf", "birthday")
+    VALUES ($1, $2, $3, $4)
+    `,
+      [
+        newCustomer.name,
+        newCustomer.phone,
+        newCustomer.cpf,
+        newCustomer.birthday,
+      ]
+    );
+    res.sendStatus(201);
+  } catch {
+    res.sendStatus(500);
+  }
+}
