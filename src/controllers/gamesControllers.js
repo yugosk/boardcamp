@@ -5,7 +5,7 @@ export async function getGames(req, res) {
   if (!filter) {
     try {
       const { rows: gameList } = await connection.query(
-        `SELECT games.id, games.name, image, "stockTotal", "categoryId", "pricePerDay", categories.name AS "categoryName" FROM games
+        `SELECT games.*, categories.name AS "categoryName" FROM games
         JOIN categories
         ON games."categoryId" = categories.id`
       );
@@ -16,13 +16,12 @@ export async function getGames(req, res) {
   } else {
     try {
       const { rows: gameList } = await connection.query(
-        `SELECT games.id, games.name, image, "stockTotal", "categoryId", "pricePerDay", categories.name AS "categoryName" FROM games
+        `SELECT games.*, categories.name AS "categoryName" FROM games
         JOIN categories
         ON games."categoryId" = categories.id
         WHERE LOWER(games.name) LIKE LOWER($1)`,
         [`${filter}%`]
       );
-      //missing JOIN to add categoryName property
       res.send(gameList);
     } catch {
       res.sendStatus(500);
