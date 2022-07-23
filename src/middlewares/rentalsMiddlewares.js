@@ -58,3 +58,35 @@ export async function checkAvailability(req, res, next) {
 
   next();
 }
+
+export async function validateReturnId(req, res, next) {
+  const rentalId = req.params.id;
+  const { rows: checkId } = await connection.query(
+    `
+  SELECT * FROM rentals WHERE id = $1
+  `,
+    [rentalId]
+  );
+  if (checkId.length === 0) {
+    return res.sendStatus(404);
+  }
+
+  res.locals.id = rentalId;
+  next();
+}
+
+export async function checkReturn(req, res, next) {
+  const rentalId = res.locals.id;
+  const { rows: checkReturn } = await connection.query(
+    `
+  SELECT * FROM rentals WHERE id = $1 AND "returnDate" IS NULL
+  `,
+    [rentalId]
+  );
+
+  if (checkReturn.length === 0) {
+    return res.sendStatus(400);
+  }
+
+  next();
+}

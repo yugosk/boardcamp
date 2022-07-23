@@ -102,3 +102,36 @@ export async function postRental(req, res) {
     res.sendStatus(500);
   }
 }
+
+export async function postReturn(req, res) {
+  const rentalId = res.locals.id;
+  const today = dayjs().format("YYYY-MM-DD");
+  const { rows: rentalInfo } = await connection.query(
+    `
+  SELECT "daysRented", "rentDate", "originalPrice" FROM rentals WHERE id = $1
+  `,
+    [rentalId]
+  );
+
+  const difference = dayjs(today).diff(rentalInfo[0].rentDate, "day");
+
+  if (difference) {
+    await connection.query(
+      `
+    UPDATE rentals SET "returnDate"='${today}', "delayFee"=${
+        difference * (rentalInfo[0].originalPrice / rentalInfo[0].daysRented)
+      } WHERE id = $1
+    `,
+      [rentalId]
+    );
+  } else {
+    await connection.query(
+      `
+    UPDATE rentals SET "returnDate"='${today}' WHERE id = $1
+    `,
+      [rentalId]
+    );
+  }
+
+  res.sendStatus(200);
+}
