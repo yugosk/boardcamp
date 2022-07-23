@@ -6,7 +6,7 @@ export async function validateRentalFormat(req, res, next) {
 
   const { error } = rentalSchema.validate(newRental, { abortEarly: false });
   if (error) {
-    return res.sendStatus(400);
+    return res.status(400).send("formato");
   }
 
   res.locals.rental = newRental;
@@ -27,11 +27,11 @@ export async function validateRentalIds(req, res, next) {
     `
     SELECT * FROM customers WHERE id = $1
     `,
-    [newRental.checkCustomerId]
+    [newRental.customerId]
   );
 
   if (checkGameId.length === 0 || checkCustomerId.length === 0) {
-    return res.sendStatus(400);
+    return res.status(400).send("gameId ou customerId");
   }
 
   next();
@@ -41,7 +41,7 @@ export async function checkAvailability(req, res, next) {
   const { gameId } = res.locals.rental;
   const { rows: rentals } = await connection.query(
     `
-    SELECT "returnDate" from rentals WHERE "gameId" = $1 AND "returnDate" IS NOT NULL
+    SELECT "returnDate" from rentals WHERE "gameId" = $1 AND "returnDate" IS NULL
     `,
     [gameId]
   );
