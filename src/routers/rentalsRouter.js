@@ -3,6 +3,7 @@ import {
   getRentals,
   postRental,
   postReturn,
+  deleteRental,
 } from "../controllers/rentalsControllers.js";
 import {
   validateRentalFormat,
@@ -27,6 +28,12 @@ rentalsRouter.post(
   validateReturnId,
   checkReturn,
   postReturn
+);
+rentalsRouter.delete(
+  "/rentals/:id",
+  validateReturnId,
+  checkReturn,
+  deleteRental
 );
 
 export default rentalsRouter;

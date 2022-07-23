@@ -135,3 +135,19 @@ export async function postReturn(req, res) {
 
   res.sendStatus(200);
 }
+
+export async function deleteRental(req, res) {
+  const rentalId = res.locals.id;
+  try {
+    await connection.query(
+      `
+      DELETE FROM rentals WHERE id = $1
+      `,
+      [rentalId]
+    );
+
+    res.sendStatus(200);
+  } catch {
+    res.sendStatus(500);
+  }
+}
