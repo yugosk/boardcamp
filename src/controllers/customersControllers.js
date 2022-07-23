@@ -1,15 +1,50 @@
 import connection from "../dbStrategy/postgres.js";
 
 export async function getCustomers(req, res) {
+  const offset = Number(req.query.offset);
+  const limit = Number(req.query.limit);
   const filter = req.query.cpf;
+
   if (!filter) {
-    try {
-      const { rows: customerList } = await connection.query(
-        `SELECT * FROM customers`
-      );
-      res.send(customerList);
-    } catch {
-      res.sendStatus(500);
+    if (offset && limit) {
+      try {
+        const { rows: customerList } = await connection.query(
+          `SELECT * FROM customers LIMIT $1 OFFSET $2`,
+          [limit, offset]
+        );
+        res.send(customerList);
+      } catch {
+        res.sendStatus(500);
+      }
+    } else if (limit) {
+      try {
+        const { rows: customerList } = await connection.query(
+          `SELECT * FROM customers LIMIT $1`,
+          [limit]
+        );
+        res.send(customerList);
+      } catch {
+        res.sendStatus(500);
+      }
+    } else if (offset) {
+      try {
+        const { rows: customerList } = await connection.query(
+          `SELECT * FROM customers OFFSET $1`,
+          [offset]
+        );
+        res.send(customerList);
+      } catch {
+        res.sendStatus(500);
+      }
+    } else {
+      try {
+        const { rows: customerList } = await connection.query(
+          `SELECT * FROM customers`
+        );
+        res.send(customerList);
+      } catch {
+        res.sendStatus(500);
+      }
     }
   } else {
     try {

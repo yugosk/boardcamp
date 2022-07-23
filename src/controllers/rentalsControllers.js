@@ -27,6 +27,8 @@ function mapResponse(obj) {
 export async function getRentals(req, res) {
   const customerQuery = req.query.customerId;
   const gameQuery = req.query.gameId;
+  const offset = Number(req.query.offset);
+  const limit = Number(req.query.limit);
 
   if (customerQuery) {
     try {
@@ -61,16 +63,66 @@ export async function getRentals(req, res) {
       res.sendStatus(500);
     }
   } else {
-    try {
-      const { rows: rentalList } = await connection.query(`
-          SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
-          JOIN customers ON rentals."customerId" = customers.id
-          JOIN games ON rentals."gameId" = games.id
-          JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
-          `);
-      res.send(rentalList.map(mapResponse));
-    } catch {
-      res.sendStatus(500);
+    if (offset && limit) {
+      try {
+        const { rows: rentalList } = await connection.query(
+          `
+            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
+            JOIN customers ON rentals."customerId" = customers.id
+            JOIN games ON rentals."gameId" = games.id
+            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
+            LIMIT $1 OFFSET $2
+            `,
+          [limit, offset]
+        );
+        res.send(rentalList.map(mapResponse));
+      } catch {
+        res.sendStatus(500);
+      }
+    } else if (limit) {
+      try {
+        const { rows: rentalList } = await connection.query(
+          `
+            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
+            JOIN customers ON rentals."customerId" = customers.id
+            JOIN games ON rentals."gameId" = games.id
+            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
+            LIMIT $1
+            `,
+          [limit]
+        );
+        res.send(rentalList.map(mapResponse));
+      } catch {
+        res.sendStatus(500);
+      }
+    } else if (offset) {
+      try {
+        const { rows: rentalList } = await connection.query(
+          `
+            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
+            JOIN customers ON rentals."customerId" = customers.id
+            JOIN games ON rentals."gameId" = games.id
+            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
+            OFFSET $1
+            `,
+          [offset]
+        );
+        res.send(rentalList.map(mapResponse));
+      } catch {
+        res.sendStatus(500);
+      }
+    } else {
+      try {
+        const { rows: rentalList } = await connection.query(`
+            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
+            JOIN customers ON rentals."customerId" = customers.id
+            JOIN games ON rentals."gameId" = games.id
+            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
+            `);
+        res.send(rentalList.map(mapResponse));
+      } catch {
+        res.sendStatus(500);
+      }
     }
   }
 }
