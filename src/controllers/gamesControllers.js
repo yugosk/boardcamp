@@ -4,58 +4,27 @@ export async function getGames(req, res) {
   const offset = Number(req.query.offset);
   const limit = Number(req.query.limit);
   const filter = req.query.name;
+  let additionalOperators = "";
+
+  if (offset && limit) {
+    additionalOperators += `LIMIT ${limit} OFFSET ${offset}`;
+  } else if (limit) {
+    additionalOperators += `LIMIT ${limit}`;
+  } else if (offset) {
+    additionalOperators += `OFFSET ${offset}`;
+  }
 
   if (!filter) {
-    if (offset && limit) {
-      try {
-        const { rows: gameList } = await connection.query(
-          `SELECT games.*, categories.name AS "categoryName" FROM games
-          JOIN categories
-          ON games."categoryId" = categories.id
-          LIMIT $1 OFFSET $2`,
-          [limit, offset]
-        );
-        res.send(gameList);
-      } catch {
-        res.sendStatus(500);
-      }
-    } else if (limit) {
-      try {
-        const { rows: gameList } = await connection.query(
-          `SELECT games.*, categories.name AS "categoryName" FROM games
-          JOIN categories
-          ON games."categoryId" = categories.id
-          LIMIT $1`,
-          [limit]
-        );
-        res.send(gameList);
-      } catch {
-        res.sendStatus(500);
-      }
-    } else if (offset) {
-      try {
-        const { rows: gameList } = await connection.query(
-          `SELECT games.*, categories.name AS "categoryName" FROM games
-          JOIN categories
-          ON games."categoryId" = categories.id
-          OFFSET $1`,
-          [offset]
-        );
-        res.send(gameList);
-      } catch {
-        res.sendStatus(500);
-      }
-    } else {
-      try {
-        const { rows: gameList } = await connection.query(
-          `SELECT games.*, categories.name AS "categoryName" FROM games
-          JOIN categories
-          ON games."categoryId" = categories.id`
-        );
-        res.send(gameList);
-      } catch {
-        res.sendStatus(500);
-      }
+    try {
+      const { rows: gameList } = await connection.query(
+        `SELECT games.*, categories.name AS "categoryName" FROM games
+        JOIN categories
+        ON games."categoryId" = categories.id
+        ${additionalOperators}`
+      );
+      res.send(gameList);
+    } catch {
+      res.sendStatus(500);
     }
   } else {
     try {
@@ -63,7 +32,8 @@ export async function getGames(req, res) {
         `SELECT games.*, categories.name AS "categoryName" FROM games
         JOIN categories
         ON games."categoryId" = categories.id
-        WHERE LOWER(games.name) LIKE LOWER($1)`,
+        WHERE LOWER(games.name) LIKE LOWER($1)
+        ${additionalOperators}`,
         [`${filter}%`]
       );
       res.send(gameList);

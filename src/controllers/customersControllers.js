@@ -4,52 +4,31 @@ export async function getCustomers(req, res) {
   const offset = Number(req.query.offset);
   const limit = Number(req.query.limit);
   const filter = req.query.cpf;
+  let additionalOperators = "";
+
+  if (offset && limit) {
+    additionalOperators += `LIMIT ${limit} OFFSET ${offset}`;
+  } else if (limit) {
+    additionalOperators += `LIMIT ${limit}`;
+  } else if (offset) {
+    additionalOperators += `OFFSET ${offset}`;
+  }
 
   if (!filter) {
-    if (offset && limit) {
-      try {
-        const { rows: customerList } = await connection.query(
-          `SELECT * FROM customers LIMIT $1 OFFSET $2`,
-          [limit, offset]
-        );
-        res.send(customerList);
-      } catch {
-        res.sendStatus(500);
-      }
-    } else if (limit) {
-      try {
-        const { rows: customerList } = await connection.query(
-          `SELECT * FROM customers LIMIT $1`,
-          [limit]
-        );
-        res.send(customerList);
-      } catch {
-        res.sendStatus(500);
-      }
-    } else if (offset) {
-      try {
-        const { rows: customerList } = await connection.query(
-          `SELECT * FROM customers OFFSET $1`,
-          [offset]
-        );
-        res.send(customerList);
-      } catch {
-        res.sendStatus(500);
-      }
-    } else {
-      try {
-        const { rows: customerList } = await connection.query(
-          `SELECT * FROM customers`
-        );
-        res.send(customerList);
-      } catch {
-        res.sendStatus(500);
-      }
+    try {
+      const { rows: customerList } = await connection.query(
+        `SELECT * FROM customers
+        ${additionalOperators}`
+      );
+      res.send(customerList);
+    } catch {
+      res.sendStatus(500);
     }
   } else {
     try {
       const { rows: customerList } = await connection.query(
-        `SELECT * FROM customers WHERE cpf LIKE $1`,
+        `SELECT * FROM customers WHERE cpf LIKE $1
+        ${additionalOperators}`,
         [`${filter}%`]
       );
       res.send(customerList);

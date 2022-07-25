@@ -29,6 +29,15 @@ export async function getRentals(req, res) {
   const gameQuery = req.query.gameId;
   const offset = Number(req.query.offset);
   const limit = Number(req.query.limit);
+  let additionalOperators = "";
+
+  if (offset && limit) {
+    additionalOperators += `LIMIT ${limit} OFFSET ${offset}`;
+  } else if (limit) {
+    additionalOperators += `LIMIT ${limit}`;
+  } else if (offset) {
+    additionalOperators += `OFFSET ${offset}`;
+  }
 
   if (customerQuery) {
     try {
@@ -39,6 +48,7 @@ export async function getRentals(req, res) {
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
           WHERE rentals."customerId" = $1
+          ${additionalOperators}
           `,
         [customerQuery]
       );
@@ -55,6 +65,7 @@ export async function getRentals(req, res) {
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
           WHERE rentals."gameId" = $1
+          ${additionalOperators}
           `,
         [gameQuery]
       );
@@ -63,66 +74,17 @@ export async function getRentals(req, res) {
       res.sendStatus(500);
     }
   } else {
-    if (offset && limit) {
-      try {
-        const { rows: rentalList } = await connection.query(
-          `
-            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
-            JOIN customers ON rentals."customerId" = customers.id
-            JOIN games ON rentals."gameId" = games.id
-            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
-            LIMIT $1 OFFSET $2
-            `,
-          [limit, offset]
-        );
-        res.send(rentalList.map(mapResponse));
-      } catch {
-        res.sendStatus(500);
-      }
-    } else if (limit) {
-      try {
-        const { rows: rentalList } = await connection.query(
-          `
-            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
-            JOIN customers ON rentals."customerId" = customers.id
-            JOIN games ON rentals."gameId" = games.id
-            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
-            LIMIT $1
-            `,
-          [limit]
-        );
-        res.send(rentalList.map(mapResponse));
-      } catch {
-        res.sendStatus(500);
-      }
-    } else if (offset) {
-      try {
-        const { rows: rentalList } = await connection.query(
-          `
-            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
-            JOIN customers ON rentals."customerId" = customers.id
-            JOIN games ON rentals."gameId" = games.id
-            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
-            OFFSET $1
-            `,
-          [offset]
-        );
-        res.send(rentalList.map(mapResponse));
-      } catch {
-        res.sendStatus(500);
-      }
-    } else {
-      try {
-        const { rows: rentalList } = await connection.query(`
-            SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
-            JOIN customers ON rentals."customerId" = customers.id
-            JOIN games ON rentals."gameId" = games.id
-            JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
-            `);
-        res.send(rentalList.map(mapResponse));
-      } catch {
-        res.sendStatus(500);
-      }
+    try {
+      const { rows: rentalList } = await connection.query(`
+          SELECT rentals.*, customers.name AS "customerName", games.name, games."categoryId", categories.name AS "categoryName" FROM rentals
+          JOIN customers ON rentals."customerId" = customers.id
+          JOIN games ON rentals."gameId" = games.id
+          JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
+          ${additionalOperators}
+          `);
+      res.send(rentalList.map(mapResponse));
+    } catch {
+      res.sendStatus(500);
     }
   }
 }
