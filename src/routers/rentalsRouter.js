@@ -4,6 +4,7 @@ import {
   postRental,
   postReturn,
   deleteRental,
+  getMetrics,
 } from "../controllers/rentalsControllers.js";
 import {
   validateRentalFormat,
@@ -35,5 +36,6 @@ rentalsRouter.delete(
   checkReturn,
   deleteRental
 );
+rentalsRouter.get("/rentals/metrics", getMetrics);
 
 export default rentalsRouter;

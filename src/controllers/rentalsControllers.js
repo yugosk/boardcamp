@@ -186,3 +186,22 @@ export async function deleteRental(req, res) {
     res.sendStatus(500);
   }
 }
+
+function addAverage(obj) {
+  return {
+    revenue: obj.revenue,
+    rentals: obj.rentals,
+    average: Math.floor(obj.revenue / obj.rentals),
+  };
+}
+
+export async function getMetrics(req, res) {
+  try {
+    const { rows: metrics } = await connection.query(`
+    SELECT SUM("originalPrice" + "delayFee") AS revenue, COUNT(id) AS "rentals" FROM rentals
+    `);
+    res.send(addAverage(metrics[0]));
+  } catch {
+    res.sendStatus(500);
+  }
+}
