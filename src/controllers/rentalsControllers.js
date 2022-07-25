@@ -167,7 +167,7 @@ export async function postReturn(req, res) {
 
   const difference = dayjs(today).diff(rentalInfo[0].rentDate, "day");
 
-  if (difference) {
+  if (difference > rentalInfo[0].daysRented) {
     await connection.query(
       `
     UPDATE rentals SET "returnDate"='${today}', "delayFee"=${
