@@ -30,6 +30,7 @@ export async function getRentals(req, res) {
   const offset = Number(req.query.offset);
   const limit = Number(req.query.limit);
   let additionalOperators = "";
+  let orderOperators = "";
 
   if (offset && limit) {
     additionalOperators += `LIMIT ${limit} OFFSET ${offset}`;
@@ -37,6 +38,12 @@ export async function getRentals(req, res) {
     additionalOperators += `LIMIT ${limit}`;
   } else if (offset) {
     additionalOperators += `OFFSET ${offset}`;
+  }
+
+  if (order && desc) {
+    orderOperators += `ORDER BY ${order} DESC`;
+  } else if (order) {
+    orderOperators += `ORDER BY ${order} ASC`;
   }
 
   if (customerQuery) {
@@ -48,6 +55,7 @@ export async function getRentals(req, res) {
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
           WHERE rentals."customerId" = $1
+          ${orderOperators}
           ${additionalOperators}
           `,
         [customerQuery]
@@ -65,6 +73,7 @@ export async function getRentals(req, res) {
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
           WHERE rentals."gameId" = $1
+          ${orderOperators}
           ${additionalOperators}
           `,
         [gameQuery]
@@ -80,6 +89,7 @@ export async function getRentals(req, res) {
           JOIN customers ON rentals."customerId" = customers.id
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
+          ${orderOperators}
           ${additionalOperators}
           `);
       res.send(rentalList.map(mapResponse));

@@ -5,6 +5,7 @@ export async function getGames(req, res) {
   const limit = Number(req.query.limit);
   const filter = req.query.name;
   let additionalOperators = "";
+  let orderOperators = "";
 
   if (offset && limit) {
     additionalOperators += `LIMIT ${limit} OFFSET ${offset}`;
@@ -14,12 +15,19 @@ export async function getGames(req, res) {
     additionalOperators += `OFFSET ${offset}`;
   }
 
+  if (order && desc) {
+    orderOperators += `ORDER BY ${order} DESC`;
+  } else if (order) {
+    orderOperators += `ORDER BY ${order} ASC`;
+  }
+
   if (!filter) {
     try {
       const { rows: gameList } = await connection.query(
         `SELECT games.*, categories.name AS "categoryName" FROM games
         JOIN categories
         ON games."categoryId" = categories.id
+        ${orderOperators}
         ${additionalOperators}`
       );
       res.send(gameList);
@@ -33,6 +41,7 @@ export async function getGames(req, res) {
         JOIN categories
         ON games."categoryId" = categories.id
         WHERE LOWER(games.name) LIKE LOWER($1)
+        ${orderOperators}
         ${additionalOperators}`,
         [`${filter}%`]
       );

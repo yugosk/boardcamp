@@ -5,6 +5,7 @@ export async function getCustomers(req, res) {
   const limit = Number(req.query.limit);
   const filter = req.query.cpf;
   let additionalOperators = "";
+  let orderOperators = "";
 
   if (offset && limit) {
     additionalOperators += `LIMIT ${limit} OFFSET ${offset}`;
@@ -14,10 +15,17 @@ export async function getCustomers(req, res) {
     additionalOperators += `OFFSET ${offset}`;
   }
 
+  if (order && desc) {
+    orderOperators += `ORDER BY ${order} DESC`;
+  } else if (order) {
+    orderOperators += `ORDER BY ${order} ASC`;
+  }
+
   if (!filter) {
     try {
       const { rows: customerList } = await connection.query(
         `SELECT * FROM customers
+        ${orderOperators}
         ${additionalOperators}`
       );
       res.send(customerList);
@@ -28,6 +36,7 @@ export async function getCustomers(req, res) {
     try {
       const { rows: customerList } = await connection.query(
         `SELECT * FROM customers WHERE cpf LIKE $1
+        ${orderOperators}
         ${additionalOperators}`,
         [`${filter}%`]
       );
