@@ -29,8 +29,16 @@ export async function getRentals(req, res) {
   const gameQuery = req.query.gameId;
   const offset = Number(req.query.offset);
   const limit = Number(req.query.limit);
+  const { status, startDate, order } = req.query;
   let additionalOperators = "";
   let orderOperators = "";
+  let statusFilters = "";
+
+  if (status === "open") {
+    statusFilters += `AND rentals."returnDate" IS NOT NULL`;
+  } else if (status === "closed") {
+    statusFilters += `AND rentals."returnDate" IS NULL`;
+  }
 
   if (offset && limit) {
     additionalOperators += `LIMIT ${limit} OFFSET ${offset}`;
@@ -55,6 +63,7 @@ export async function getRentals(req, res) {
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
           WHERE rentals."customerId" = $1
+          ${statusFilters}
           ${orderOperators}
           ${additionalOperators}
           `,
@@ -73,6 +82,7 @@ export async function getRentals(req, res) {
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
           WHERE rentals."gameId" = $1
+          ${statusFilters}
           ${orderOperators}
           ${additionalOperators}
           `,
@@ -89,6 +99,7 @@ export async function getRentals(req, res) {
           JOIN customers ON rentals."customerId" = customers.id
           JOIN games ON rentals."gameId" = games.id
           JOIN categories ON categories.id = (SELECT "categoryId" FROM games WHERE id = rentals."gameId")
+          ${statusFilters}
           ${orderOperators}
           ${additionalOperators}
           `);
